@@ -1,0 +1,52 @@
+= RethinkDB plugin for {Fluentd}[http://github.com/fluent/fluentd]
+
+fluent-plugin-rethink provides input and output plugins for {Fluentd}[http://fluentd.org] ({GitHub}[http://github.com/fluent/fluentd])
+
+= Installation
+
+== Gems
+
+The gem is hosted at {Rubygems.org}[http://rubygems.org]. You can install the gem as follows:
+
+    $ gem install fluent-plugin-rethink
+
+= Plugins
+
+== Output plugin
+
+=== rethink
+
+Store Fluentd event to RethinkDB database.
+
+==== Configuration
+
+Use _rethink_ type in match.
+
+    <match rethink.**>
+      type rethink
+      database fluent
+      table test
+
+      # Following attibutes are optional
+      host localhost
+      port 28015
+
+      # Other buffer configurations here
+    </match>
+
+= Test
+
+Run following command:
+
+    $ bundle exec rake test
+
+= TODO
+
+== More configuration
+== Auto create table, db
+
+= Copyright
+
+Copyright:: Copyright (c) 2014- kureikain
+License::   Apache License, Version 0.1.0
+
