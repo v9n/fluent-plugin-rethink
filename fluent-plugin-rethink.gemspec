@@ -20,4 +20,6 @@ Gem::Specification.new do |gem|
   gem.add_dependency "rethinkdb", ">= 1.15.0"
   gem.add_development_dependency "rake", ">= 0.9.2"
   gem.add_development_dependency "simplecov", ">= 0.5.4"
+  gem.add_development_dependency "minitest", "~> 4.7.3"
+  
 end

@@ -19,6 +19,7 @@ GEM
       yajl-ruby (~> 1.0)
     http_parser.rb (0.6.0)
     json (1.8.1)
+    minitest (4.7.5)
     msgpack (0.5.9)
     multi_json (1.10.1)
     rake (10.3.2)
@@ -37,5 +38,6 @@ PLATFORMS
 
 DEPENDENCIES
   fluent-plugin-rethink!
+  minitest (~> 4.7.3)
   rake (>= 0.9.2)
   simplecov
