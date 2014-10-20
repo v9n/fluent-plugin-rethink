@@ -83,7 +83,7 @@ class RethinkOutputTest < Test::Unit::TestCase
     d.emit({'a' => 1}, time)
     d.emit({'a' => 2}, time)
     d.expect_format([{'tag' => 'test','a' => 1, 'time' => time].to_msgpack)
-    d.expect_format([{'tag' => 'test','a' => 2}, 'time' => time].to_msgpack)
+    d.expect_format([{'tag' => 'test','a' => 2}, 'time' => time}.to_msgpack)
     d.run
 
     assert_equal(2, r.table(table_name).count().run(@@conn))
