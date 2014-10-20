@@ -11,6 +11,12 @@ module Fluent
     config_param :table, :string, :default => :log
     config_param :port, :integer, :default => 28015
 
+    include SetTagKeyMixin
+    config_set_default :include_tag_key, true
+
+    include SetTimeKeyMixin
+    config_set_default :include_time_key, true
+
     # This method is called before starting.
     # 'conf' is a Hash that includes configuration parameters.
     # If the configuration is invalid, raise Fluent::ConfigError.
@@ -28,6 +34,7 @@ module Fluent
       @conn = r.connect(:host => @host,
                         :port => @port,
                         :db => @db)
+      puts @port
     end
 
     def shutdown
@@ -50,10 +57,12 @@ module Fluent
       records = []
       chunk.msgpack_each {|(tag,time,record)|
         record[@time_key] = Time.at(time || record[@time_key]) if @include_time_key
+        record[@tag_key] = tag if @include_tag_key
         records << record
       }
+
       begin
-        r.table("LOP").insert(records).run(@conn) unless records.empty?
+        r.table(@table).insert(records).run(@conn) unless records.empty?
       rescue 
       end
     end    
