@@ -1,5 +1,7 @@
 = RethinkDB plugin for {Fluentd}[http://github.com/fluent/fluentd]
 
+[![wercker status](https://app.wercker.com/status/0c72e5a36e4af70eed99c174a4be97c4/s "wercker status")](https://app.wercker.com/project/bykey/0c72e5a36e4af70eed99c174a4be97c4)
+
 fluent-plugin-rethink provides input and output plugins for {Fluentd}[http://fluentd.org] ({GitHub}[http://github.com/fluent/fluentd])
 
 = Installation

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 require_relative '../test_helper'
+require 'Time'
 
 class RethinkOutputTest < Test::Unit::TestCase
   include RethinkTestHelper
@@ -82,8 +83,8 @@ class RethinkOutputTest < Test::Unit::TestCase
     time = Time.parse("2011-01-02 13:14:15 UTC").to_i
     d.emit({'a' => 1}, time)
     d.emit({'a' => 2}, time)
-    d.expect_format([{'tag' => 'test','a' => 1, 'time' => time].to_msgpack)
-    d.expect_format([{'tag' => 'test','a' => 2}, 'time' => time}.to_msgpack)
+    d.expect_format([ 'test', time, {'a' => 1}].to_msgpack)
+    d.expect_format([ 'test', time, {'a' => 2}].to_msgpack)
     d.run
 
     assert_equal(2, r.table(table_name).count().run(@@conn))
