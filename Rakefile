@@ -6,3 +6,7 @@ Rake::TestTask.new do |t|
   t.pattern = "test/plugin/*_test.rb"
 end
 
+task :step do
+  puts "Step 1"
+end
+

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 require_relative '../test_helper'
-require 'Time'
+require 'time'
 
 class RethinkOutputTest < Test::Unit::TestCase
   include RethinkTestHelper
@@ -80,13 +80,12 @@ class RethinkOutputTest < Test::Unit::TestCase
   def test_format
     d = create_driver default_config
     r.table_create(table_name).run(@@conn) rescue nil
-    time = Time.parse("2011-01-02 13:14:15 UTC").to_i
-    d.emit({'a' => 1}, time)
-    d.emit({'a' => 2}, time)
-    d.expect_format([ 'test', time, {'a' => 1}].to_msgpack)
-    d.expect_format([ 'test', time, {'a' => 2}].to_msgpack)
+    time = Time.parse("2011-01-02 13:14:15 UTC")
+    d.emit({'field' => 1}, time.to_i)
+    d.emit({'field' => 2}, time.to_i)
+    d.expect_format([ 'test', time.to_i, {'field' => 1, 'time'=>time.to_s}].to_msgpack)
+    d.expect_format([ 'test', time.to_i, {'field' => 2, 'time'=>time.to_s}].to_msgpack)
     d.run
-
     assert_equal(2, r.table(table_name).count().run(@@conn))
   end
 
