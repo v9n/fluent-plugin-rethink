@@ -13,7 +13,8 @@ class RethinkOutputTest < Test::Unit::TestCase
   end
 
   def teardown
-    #r.table_drop(table_name).run(@@conn) rescue nil
+    r.table_drop(table_name).run(@@conn) rescue nil
+    r.table_create(table_name).run(@@conn) rescue nil
     teardown_rethinkdb
   end
 
@@ -83,16 +84,16 @@ class RethinkOutputTest < Test::Unit::TestCase
     time = Time.parse("2011-01-02 13:14:15 UTC")
     d.emit({'field' => 1}, time)
     d.emit({'field' => 2}, time)
-    d.expect_format([ 'test', time.to_s, {'field' => 1, 'time'=>time.to_s}].to_msgpack)
-    d.expect_format([ 'test', time.to_s, {'field' => 2, 'time'=>time.to_s}].to_msgpack)
+    d.expect_format([ 'test', time.to_i, {'field' => 1, 'time'=>time.utc.iso8601}].to_msgpack)
+    d.expect_format([ 'test', time.to_i, {'field' => 2, 'time'=>time.utc.iso8601}].to_msgpack)
     d.run
     assert_equal(2, r.table(table_name).count().run(@@conn))
   end
 
   def emit_documents(d)
-    time = Time.parse("2011-01-02 13:14:15 UTC").to_i
-    d.emit({'a' => 1}, time)
-    d.emit({'a' => 2}, time)
+    time = Time.parse("2011-01-02 13:14:15 UTC")
+    d.emit({'field' => 1}, time)
+    d.emit({'field' => 2}, time)
     time
   end
 
@@ -104,11 +105,15 @@ class RethinkOutputTest < Test::Unit::TestCase
     d = create_driver default_config
     t = emit_documents(d)
     d.run
-    documents = get_documents.map { |e| e['a'] }.sort
-    assert_equal([1, 2], documents)
-    assert_equal(2, documents.size)
+    records = []
+    get_documents.each do |r|
+      records << r['field']
+    end
+    #documents = documents.map { |e| e['a'] }.sort
+    records.sort!
+    assert_equal([1, 2], records)
+    assert_equal(2, records.length)
   end
 
 end
-
 

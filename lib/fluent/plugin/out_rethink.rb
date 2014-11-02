@@ -34,7 +34,6 @@ module Fluent
       @conn = r.connect(:host => @host,
                         :port => @port,
                         :db => @db)
-      puts @port
     end
 
     def shutdown
