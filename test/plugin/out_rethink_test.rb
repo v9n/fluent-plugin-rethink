@@ -8,7 +8,6 @@ class RethinkOutputTest < Test::Unit::TestCase
   def setup
     Fluent::Test.setup
     require 'fluent/plugin/out_rethink'
-
     setup_rethinkdb
   end
 
@@ -22,14 +21,20 @@ class RethinkOutputTest < Test::Unit::TestCase
     'test'
   end
 
-  def default_config
+  def base_config
     %[
       type rethink
       database #{RETHINK_DB}
       table #{table_name}
       port #{unused_port}
-      include_time_key yes
       ]
+  end
+
+  def default_config
+    base_config + %[
+      include_time_key true
+      include_tag_key false # TestDriver ignore config_set_default?
+    ]
   end
 
   def create_driver(conf = default_config)
@@ -46,7 +51,7 @@ class RethinkOutputTest < Test::Unit::TestCase
       table log
       host localhost
       port #{unused_port}
-                      ])
+      ])
 
     assert_equal('fluent_test', d.instance.database)
     assert_equal('log', d.instance.table)
@@ -79,13 +84,15 @@ class RethinkOutputTest < Test::Unit::TestCase
   #end
 
   def test_format
-    d = create_driver default_config
+    d = create_driver(default_config + %[
+      include_tag_key true
+    ])
     r.table_create(table_name).run(@@conn) rescue nil
     time = Time.parse("2011-01-02 13:14:15 UTC")
     d.emit({'field' => 1}, time)
     d.emit({'field' => 2}, time)
-    d.expect_format([ 'test', time.to_i, {'field' => 1, 'time'=>time.utc.iso8601}].to_msgpack)
-    d.expect_format([ 'test', time.to_i, {'field' => 2, 'time'=>time.utc.iso8601}].to_msgpack)
+    d.expect_format([ 'test', time.to_i, {'field' => 1, 'tag' => 'test', 'time'=>time.utc.iso8601 }].to_msgpack)
+    d.expect_format([ 'test', time.to_i, {'field' => 2, 'tag' => 'test', 'time'=>time.utc.iso8601}].to_msgpack)
     d.run
     assert_equal(2, r.table(table_name).count().run(@@conn))
   end
@@ -113,6 +120,50 @@ class RethinkOutputTest < Test::Unit::TestCase
     records.sort!
     assert_equal([1, 2], records)
     assert_equal(2, records.length)
+  end
+
+  def test_format_no_tagkey
+    d = create_driver(base_config + %[
+                      include_time_key true
+                      include_tag_key false
+                      ])
+    r.table_create(table_name).run(@@conn) rescue nil
+    time = Time.parse("2011-01-02 13:14:15 UTC")
+    d.emit({'field' => 1}, time)
+    d.emit({'field' => 2}, time)
+    d.expect_format(['test', time.to_i, {'field' => 1, 'time'=>time.utc.iso8601}].to_msgpack)
+    d.expect_format(['test', time.to_i, {'field' => 2, 'time'=>time.utc.iso8601}].to_msgpack)
+    d.run
+    assert_equal(2, r.table(table_name).count().run(@@conn))
+  end
+
+  def test_format_no_timekey
+    d = create_driver(base_config + %[include_time_key no])
+    r.table_create(table_name).run(@@conn) rescue nil
+    time = Time.parse("2011-01-02 13:14:15 UTC")
+    d.emit({'field' => 1}, time)
+    d.emit({'field' => 2}, time)
+    d.expect_format(['test', time.to_i, {'field' => 1}].to_msgpack)
+    d.expect_format(['test', time.to_i, {'field' => 2}].to_msgpack)
+    d.run
+    assert_equal(2, r.table(table_name).count().run(@@conn))
+  end
+
+  def test_format_no_time_no_tag
+    d = create_driver(base_config + 
+                      %[
+          include_tag_key false
+          include_time_key false
+    ])
+    puts d.instance.include_time_key
+    r.table_create(table_name).run(@@conn) rescue nil
+    time = Time.parse("2011-01-02 13:14:15 UTC")
+    d.emit({'field' => 1}, time)
+    d.emit({'field' => 2}, time)
+    d.expect_format(['test', time.to_i, {'field' => 1}].to_msgpack)
+    d.expect_format(['test', time.to_i, {'field' => 2}].to_msgpack)
+    d.run
+    assert_equal(2, r.table(table_name).count().run(@@conn))
   end
 
 end
