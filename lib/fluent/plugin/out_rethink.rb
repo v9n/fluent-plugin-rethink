@@ -1,5 +1,4 @@
 require 'rethinkdb'
-require 'logger'
 
 module Fluent
   class RethinkOutput < BufferedOutput
@@ -10,6 +9,7 @@ module Fluent
     config_param :host, :string, :default => 'localhost'
     config_param :table, :string, :default => :log
     config_param :port, :integer, :default => 28015
+    config_param :auto_tag_table, :default => false
 
     include SetTagKeyMixin
     config_set_default :include_tag_key, true
@@ -53,18 +53,34 @@ module Fluent
     #
     # NOTE! This method is called by internal thread, not Fluentd's main thread. So IO wait doesn't affect other plugins.
     def write(chunk)
-      records = []
+      records = {}
       chunk.msgpack_each {|(tag,time,record)|
         record[@time_key] = Time.at(time || record[@time_key]) if @include_time_key
         record[@tag_key] = tag if @include_tag_key
-        records << record
+        records[tag] ||= []
+        records[tag] << record
       }
 
       begin
-        r.table(@table).insert(records).run(@conn) unless records.empty?
-      rescue 
+        records.map do |tag, elements|
+          if !elements.empty?
+            get_table(@auto_tag_table ? tag : @table).insert(elements).run(@conn)
+          end
+        end
+      rescue
       end
-    end    
+    end  
+
+    def get_table(table)
+      return r.table(table) unless @auto_tag_table
+
+      begin 
+        r.table_create(table).run @conn
+        r.table(table)
+      rescue RethinkDB::RqlRuntimeError =>e
+      end
+    end
 
   end
 end
+

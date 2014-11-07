@@ -67,22 +67,6 @@ class RethinkOutputTest < Test::Unit::TestCase
 
   end
 
-  #def test_configure_with_write_concern
-  #d = create_driver(default_config + %[
-  #write_concern 2
-  #])
-
-  #assert_equal({:w => 2, :ssl => false}, d.instance.connection_options)
-  #end
-
-  #def test_configure_with_ssl
-  #d = create_driver(default_config + %[
-  #ssl true
-  #])
-
-  #assert_equal({:ssl => true}, d.instance.connection_options)
-  #end
-
   def test_format
     d = create_driver(default_config + %[
       include_tag_key true
@@ -155,7 +139,6 @@ class RethinkOutputTest < Test::Unit::TestCase
           include_tag_key false
           include_time_key false
     ])
-    puts d.instance.include_time_key
     r.table_create(table_name).run(@@conn) rescue nil
     time = Time.parse("2011-01-02 13:14:15 UTC")
     d.emit({'field' => 1}, time)
@@ -164,6 +147,21 @@ class RethinkOutputTest < Test::Unit::TestCase
     d.expect_format(['test', time.to_i, {'field' => 2}].to_msgpack)
     d.run
     assert_equal(2, r.table(table_name).count().run(@@conn))
+  end
+  
+  def test_auto_tag_table
+    d = Fluent::Test::BufferedOutputTestDriver.new(Fluent::RethinkOutput, "system").configure(default_config + %[
+      auto_tag_table true
+    ])
+    emit_documents(d)
+    d.run
+    records = []
+    r.table("system").run(@@conn).each do |r|
+      records << r['field']
+    end
+    records.sort!
+    assert_equal([1, 2], records)
+    assert_equal(2, records.length)
   end
 
 end
