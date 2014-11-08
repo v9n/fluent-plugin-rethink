@@ -36,6 +36,26 @@ Use _rethink_ type in match.
       # Other buffer configurations here
     </match>
 
+===== Auto Tag
+
+It's useful if we want to log message into tables based on its tag. This can be
+done with `auto_tag_table`
+
+    <match myapp>
+      type rethink
+      database fluent
+      auto_tag_table true
+
+      # Following attibutes are optional
+      host localhost
+      port 28015
+
+      # Other buffer configurations here
+    </match>
+
+With this configuraiton, all message will be written into `myapp` table.
+
+
 = Test
 
 Run following command:
