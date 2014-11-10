@@ -64,19 +64,24 @@ module Fluent
       begin
         records.map do |tag, elements|
           if !elements.empty?
-            get_table(@auto_tag_table ? tag : @table).insert(elements).run(@conn)
+            get_table(@auto_tag_table ? tag : @table, tag).insert(elements).run(@conn)
           end
         end
       rescue
       end
     end  
 
-    def get_table(table)
+    def get_table(table, tag=nil)
       return r.table(table) unless @auto_tag_table
-
-      begin 
-        r.table_create(table).run @conn
-        r.table(table)
+      
+      begin
+        if tag.include?(".")
+          tag = tag.split(".")
+          r.db(tag[0]).table(tag[1])
+        else
+          r.table_create(table).run @conn
+          r.table(table)
+        end
       rescue RethinkDB::RqlRuntimeError =>e
       end
     end

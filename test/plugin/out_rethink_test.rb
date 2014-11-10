@@ -164,5 +164,20 @@ class RethinkOutputTest < Test::Unit::TestCase
     assert_equal(2, records.length)
   end
 
+  def test_auto_tag_database_and_table
+    d = Fluent::Test::BufferedOutputTestDriver.new(Fluent::RethinkOutput, "app.worker").configure(default_config + %[
+      auto_tag_table true
+    ])
+    emit_documents(d)
+    d.run
+    records = []
+    r.db('app').table("worker").run(@@conn).each do |r|
+      records << r['field']
+    end
+    records.sort!
+    assert_equal([1, 2], records)
+    assert_equal(2, records.length)
+  end
+
 end
 
