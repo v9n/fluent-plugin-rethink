@@ -73,8 +73,8 @@ class RethinkOutputTest < Test::Unit::TestCase
     ])
     r.table_create(table_name).run(@@conn) rescue nil
     time = Time.parse("2011-01-02 13:14:15 UTC")
-    d.emit({'field' => 1}, time)
-    d.emit({'field' => 2}, time)
+    d.emit({'field' => 1}, time.to_i)
+    d.emit({'field' => 2}, time.to_i)
     d.expect_format([ 'test', time.to_i, {'field' => 1, 'tag' => 'test', 'time'=>time.utc.iso8601 }].to_msgpack)
     d.expect_format([ 'test', time.to_i, {'field' => 2, 'tag' => 'test', 'time'=>time.utc.iso8601}].to_msgpack)
     d.run
@@ -83,8 +83,8 @@ class RethinkOutputTest < Test::Unit::TestCase
 
   def emit_documents(d)
     time = Time.parse("2011-01-02 13:14:15 UTC")
-    d.emit({'field' => 1}, time)
-    d.emit({'field' => 2}, time)
+    d.emit({'field' => 1}, time.to_i)
+    d.emit({'field' => 2}, time.to_i)
     time
   end
 
@@ -113,8 +113,8 @@ class RethinkOutputTest < Test::Unit::TestCase
                       ])
     r.table_create(table_name).run(@@conn) rescue nil
     time = Time.parse("2011-01-02 13:14:15 UTC")
-    d.emit({'field' => 1}, time)
-    d.emit({'field' => 2}, time)
+    d.emit({'field' => 1}, time.to_i)
+    d.emit({'field' => 2}, time.to_i)
     d.expect_format(['test', time.to_i, {'field' => 1, 'time'=>time.utc.iso8601}].to_msgpack)
     d.expect_format(['test', time.to_i, {'field' => 2, 'time'=>time.utc.iso8601}].to_msgpack)
     d.run
@@ -125,30 +125,30 @@ class RethinkOutputTest < Test::Unit::TestCase
     d = create_driver(base_config + %[include_time_key no])
     r.table_create(table_name).run(@@conn) rescue nil
     time = Time.parse("2011-01-02 13:14:15 UTC")
-    d.emit({'field' => 1}, time)
-    d.emit({'field' => 2}, time)
-    d.expect_format(['test', time.to_i, {'field' => 1}].to_msgpack)
-    d.expect_format(['test', time.to_i, {'field' => 2}].to_msgpack)
+    d.emit({'field' => 1}, time.to_i)
+    d.emit({'field' => 2}, time.to_i)
+    d.expect_format(['test', time.to_i, {'field' => 1, "tag" => "test"}].to_msgpack)
+    d.expect_format(['test', time.to_i, {'field' => 2, "tag" => "test"}].to_msgpack)
     d.run
     assert_equal(2, r.table(table_name).count().run(@@conn))
   end
 
   def test_format_no_time_no_tag
-    d = create_driver(base_config + 
+    d = create_driver(base_config +
                       %[
           include_tag_key false
           include_time_key false
     ])
     r.table_create(table_name).run(@@conn) rescue nil
     time = Time.parse("2011-01-02 13:14:15 UTC")
-    d.emit({'field' => 1}, time)
-    d.emit({'field' => 2}, time)
+    d.emit({'field' => 1}, time.to_i)
+    d.emit({'field' => 2}, time.to_i)
     d.expect_format(['test', time.to_i, {'field' => 1}].to_msgpack)
     d.expect_format(['test', time.to_i, {'field' => 2}].to_msgpack)
     d.run
     assert_equal(2, r.table(table_name).count().run(@@conn))
   end
-  
+
   def test_auto_tag_table
     d = Fluent::Test::BufferedOutputTestDriver.new(Fluent::RethinkOutput, "system").configure(default_config + %[
       auto_tag_table true
@@ -165,4 +165,3 @@ class RethinkOutputTest < Test::Unit::TestCase
   end
 
 end
-
