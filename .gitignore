@@ -1,3 +1,4 @@
 pkg
 test/plugin/data
 .DS_Store
+Gemfile.lock
